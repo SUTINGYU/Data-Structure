@@ -1,0 +1,132 @@
+import java.util.NoSuchElementException;
+import java.util.Random;
+
+/**
+ ** Author: Yuting Su
+ ** Date: Feb 27 2018
+ ** An array-based maxheap that can allow each node to have k children.
+*/
+
+public class BigFamilyMaxHeap<E extends Comparable<E>>
+{
+   private E[] heap;
+   private int lastIndex;
+   private int num;
+
+   public BigFamilyMaxHeap(int k)
+   {
+      // The cast is safe because the new array contains all null entries
+      @SuppressWarnings("unchecked")
+      E[] tmp = (E[])new Comparable[10];
+      heap = tmp;
+      lastIndex = 0;
+      num = k;
+   }
+
+   // 26.8
+   public void add(E newEntry)
+   {
+      int newIndex = lastIndex + 1;
+      int parentIndex = (newIndex + (num-2)) / num;
+
+      while ((parentIndex > 0) && newEntry.compareTo(heap[parentIndex]) > 0)
+      {
+         heap[newIndex] = heap[parentIndex];
+         newIndex = parentIndex;
+         parentIndex = (newIndex + (num-2) / num;
+      }
+      heap[newIndex] = newEntry;
+      lastIndex++;
+      ensureCapacity();
+   }
+
+   private void ensureCapacity()
+   {
+      if (lastIndex >= heap.length - 1)
+      {
+         // The cast is safe because the new array contains all null entries
+         @SuppressWarnings("unchecked")
+         E[] tmp = (E[])new Comparable[heap.length * 2];
+         for (int i = 0; i <= lastIndex; i++)
+         {
+            tmp[i] = heap[i];
+         }
+         heap = tmp;
+      }
+   }
+
+   // 26.12
+   public E removeMax()
+   {
+      if (lastIndex == 0)
+         throw new NoSuchElementException();
+      E root = heap[1];          // Return value
+      heap[1] = heap[lastIndex]; // Form a semiheap
+      lastIndex--;               // Decrease size
+      reheap(1);                 // Transform to a heap
+      return root;
+   }
+
+   // 26.11
+   private void reheap(int rootIndex)
+   {
+      boolean done = false;
+      E orphan = heap[rootIndex];
+      int firstChildIndex = num * rootIndex - (num - 2);
+      while (!done && (firstChildIndex <= lastIndex))
+      {
+         int largerChildIndex = firstChildIndex; // Assume larger
+         int nextChildIndex = firstChildIndex + 1;
+
+         //A for-loop to go through each child to find the larger child.
+         for(int i = 0; i < num - 1; i++)
+         {
+            if ((nextChildIndex <= lastIndex) &&
+                  heap[nextChildIndex].compareTo(heap[largerChildIndex]) > 0)
+            {
+               largerChildIndex = nextChildIndex;
+            }
+            nextChildIndex++;
+         }
+
+         //Compare the larger child with root.
+         if (orphan.compareTo(heap[largerChildIndex]) < 0)
+         {
+            heap[rootIndex] = heap[largerChildIndex];
+            rootIndex = largerChildIndex;
+            firstChildIndex = num * rootIndex - (num - 2);
+         }
+         else
+         {
+            done = true;
+         }
+         heap[rootIndex] = orphan;
+      }
+   }
+
+   // This method is here for debugging and grading purposes.
+   public void display()
+   {
+      for (int i = 1; i <= lastIndex; i++)
+         System.out.print(heap[i] + " ");
+      System.out.println();
+   }
+
+   // A main method to check if the BigFamilyMazHeap works
+   public static void main(String[] args)
+   {
+      for (int k = 2; k < 6; k++)
+      {
+         System.out.println("------------------------");
+         System.out.println("k = " + k);
+         Random rand = new Random(55057);
+         BigFamilyMaxHeap<Integer> heap = new BigFamilyMaxHeap<Integer>(k);
+         for (int i = 0; i < 20; i++)
+            heap.add(rand.nextInt(100));
+         heap.display();
+         for (int i = 0; i < 20; i++)
+            System.out.print(heap.removeMax() + " ");
+         System.out.println();
+      }
+   }
+}
