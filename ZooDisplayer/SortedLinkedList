@@ -1,0 +1,314 @@
+import java.util.Iterator;
+import java.util.Arrays;
+
+/**
+ @Author1: Charlie Broadbent
+ @Author2: Yuting Su
+ @Date: 12 Feb 2018
+ **A class that implements SortedList interface in order to make a linked sorted list.
+*/
+public class SortedLinkedList implements SortedList<ZooAnimal>
+{
+    private Node headNode;
+    private int length;
+
+    public SortedLinkedList()
+    {
+        headNode = null;
+        length = 0;
+    }
+    
+    /**
+     @Author1: Charlie Broadbent
+     @Author2: Yuting Su
+     @Date: 12 Feb 2018
+     **A nested class that is used for link implementation.
+     **The data variable is named animal because it is a zooAnimal.
+    */
+    private static class Node
+    {
+       private ZooAnimal animal;
+       private Node nextNode;
+       public Node(ZooAnimal animal)
+       {
+           this.animal = animal;
+       }
+       public ZooAnimal getAnimal()
+       {
+           return animal;
+       }
+       public void setAnimal(ZooAnimal animal)
+       {
+           this.animal = animal;
+       }
+       public Node getNextNode()
+       {
+           return nextNode;
+       }
+       public void setNextNode(Node nextNode)
+       {
+           this.nextNode = nextNode;
+       }
+    }
+    
+    /** A method that get the node at a certain position.
+    @param int position to return node from
+    **O(n)
+    */
+    public Node getNodeAt(int position)
+    {
+        Node current = headNode;
+        if (position == 0)
+        {
+            return current;
+        }
+        for (int i = 0; i < position; i++)
+        {
+            current = current.getNextNode();
+
+        }
+        return current;
+    }
+    
+    /** Adds item to the list in sorted order.
+    @param item element to be added to the list
+    **O(n^2)
+    */ 
+    public void add(ZooAnimal item)
+    {
+        Node newNode = new Node(item);
+        if (length == 0)
+        {
+            headNode = newNode;
+            length++;
+            return;
+        }
+        for(int j = 0; j < length; j++)
+        {
+            Node tempNode = getNodeAt(j);
+            int result = item.compareTo(tempNode.getAnimal());
+            if(result <= 0 && j == 0)
+            {
+                headNode = newNode;
+                headNode.setNextNode(tempNode);
+                length++;
+                return;
+            }
+            else if (result <= 0)
+            {
+                Node nodeBefore = getNodeAt(j - 1);
+                newNode.setNextNode(tempNode);
+                nodeBefore.setNextNode(newNode);
+                length++;
+                return;
+            }
+            else if (j == length - 1)
+            {
+                tempNode.setNextNode(newNode);
+                length++;
+                return;
+            }
+        } 
+    }
+    
+    /** Removes the specified element from this list, if it is present.  If this
+       list does not contain the element, it is unchanged.  Returns true if
+       this list contained the specified element.
+       @param targetItem element to be removed from this list, if present
+       @return true if this list contained the specified element
+    **O(n^2)
+    */
+    public boolean remove(ZooAnimal targetItem)
+    {
+        if (targetItem.compareTo(headNode.getAnimal()) == 0)
+        {
+            headNode = getNodeAt(1);
+            getNodeAt(0).setNextNode(null);
+            length--;
+            return true;
+        }
+        else if (targetItem.compareTo(get(length -1)) == 0)
+        {
+            getNodeAt(length - 2).setNextNode(null);
+            length--;
+            return true;
+        }
+        for(int i = 0; i < length; i++)
+        {
+            Node nodeBefore = getNodeAt(i - 1);
+            Node nodeAfter = getNodeAt(i + 1);
+            Node current = getNodeAt(i);
+
+            if (targetItem.compareTo(get(i)) == 0)
+            {
+                nodeBefore.setNextNode(nodeAfter);
+                current.setNextNode(null);
+                length--;
+                return true;
+            }
+        }
+        System.out.println("The item is not in the list.");
+        return false;
+    }
+
+    /** Removes the element at the specified position in this list. Shifts any
+        subsequent elements to the left (subtracts one from their indices).
+        Returns the element that was removed from the list.
+     @param i index of the element to be removed
+     @return the element previously at the specified position
+     @throws IndexOutOfBoundsException if the index is out of bounds.
+     **Algorithm adapted from textbook's algorithm
+     **O(n^2)
+    */
+    public ZooAnimal remove(int i)
+    {    
+        if (i < 0 || i > length -1)
+        {
+            System.err.println("Index out of bounds.");
+            return null;
+        }
+
+        else if (i==0)
+        {
+            Node removed = getNodeAt(i);
+            headNode = getNodeAt(1);
+            getNodeAt(0).setNextNode(null);
+            length--;
+            return removed.getAnimal();
+        }
+        else if (i==length-1)
+        {
+            Node removed = getNodeAt(i);
+            getNodeAt(length - 2).setNextNode(null);
+            length--;
+            return removed.getAnimal();
+        }
+        else
+        {
+            Node removed = getNodeAt(i);
+            Node nodeBefore = getNodeAt(i - 1);
+            Node nodeAfter = getNodeAt(i + 1);
+            nodeBefore.setNextNode(nodeAfter);
+            removed.setNextNode(null);
+            length--;
+            return removed.getAnimal();
+        }
+    }
+
+    /** Returns the position of the item, or -1 if item is not in the list.
+       @param targetItem item
+       @return The position of the item, or -1 if item is not in the list
+       **O(n)
+    */
+    public int indexOf(ZooAnimal targetItem)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            int result = targetItem.compareTo(getNodeAt(i).getAnimal());
+            if (result == 0)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /** Returns the element at the specified position in this list.
+       @param position specified position
+       @return the element at the specified position in this list
+       @throws IndexOutOfBoundsException if the index is out of bounds.
+       **O(n)
+    */
+    public ZooAnimal get(int position)
+    {
+        if (position < 0 || position > length -1)
+        {
+            System.err.println("Position out of bounds.");
+            return null;
+        }
+
+        return getNodeAt(position).getAnimal();
+    }    
+
+    /** Returns true if this list contains the specified element.
+       @param targetItem specified element
+       @return true if this list contains the specified element
+       **O(n^2)
+    */
+    public boolean contains(ZooAnimal targetItem)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            int result = targetItem.compareTo(getNodeAt(i).getAnimal());
+            if (result == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Returns the number of elements in this list.
+       @return the number of elements in this list.
+       **O(1)
+    */
+    public int size()
+    {
+        return length;
+    }
+
+    /** Returns true if this list contains no elements.
+       @return true if this list contains no elements.
+       **O(1)
+    */  
+    public boolean isEmpty()
+    {
+        if (length == 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /** Removes all of the elements from this list.  
+     **O(1)
+     */
+    public void clear()
+    {
+        headNode = null;
+        length = 0;
+        return;
+    }
+
+    /** Returns an array version of the list.  Note that, for technical reasons,
+       the type of the items contained in the list can't be communicated
+       properly to the caller, so an array of Objects gets returned.
+       @return an array of length size(), with the same items in it as are
+        stored in the list, in the same order
+       **O(n^2)           
+    */  
+    public Object[] toArray()
+    {
+        Object[] array = new Object[length];
+        if (length == 0)
+        {
+            System.err.println("The list is empty, so the array is empty as well.");
+        }
+        for (int i = 0; i < length; i++)
+        {
+            array[i] = getNodeAt(i).getAnimal();
+        }
+        return array;
+    }
+
+    /** NOT USED
+        Returns an iterator over the elements in this list in proper sequence.
+       (Optional.)
+       @return an iterator over the elements in this list in proper sequence
+       @throws UnsupportedOperationException if iterator not supported
+    */
+    public Iterator<ZooAnimal> iterator()
+    {
+        return null;
+    }
+}
