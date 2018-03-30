@@ -1,0 +1,185 @@
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+
+/* @author Kate Richardson (hw03)
+   @author Yuting Su (hw03 and hw07)
+   @author Charlie Broadbent(hw07)
+   original: 1-18-2018
+   revised: 2-12-2018
+A program that creates a zoo SortedLinkedList full of animals. Reads a file from a command line, and either displays text about the animal or images. 
+**/
+public class ZooDisplayer 
+{
+    SortedList<ZooAnimal> sortedList = new SortedLinkedList();
+    /** Constructs a new ZooDisplayer containing the animals in the file at
+    filePath.  If filePath is null, constructs an empty ZooDisplayer.
+    @param filePath path to the file from which to load zoo animals
+    */
+    public ZooDisplayer(String filePath)
+    {
+        loadZoo(filePath);
+        if (sortedList.isEmpty())
+        {
+            System.err.println("Your file is empty!");
+        }     
+    }
+
+    /* Loads a zoo.
+    * @ param inputFilePath file from command line
+    * help received from Jed Yang
+    */
+    public void loadZoo(String inputFilePath) 
+    {
+        
+        File inputFile = new File(inputFilePath);
+        Scanner scanner = null;
+
+        // This try-catch block makes sure that we have a file to run
+        try
+        {
+            scanner = new Scanner(inputFile);
+        }
+        catch (FileNotFoundException e)
+        {
+            System.err.println(e);
+            System.exit(1);
+        }
+
+        // This while loop reads through each line in the file, and adds it as an animal in sorted order through the ZooAnimal class
+        int numberOfLines = 0;
+        
+        while (scanner.hasNextLine()) 
+        {
+            String line = scanner.nextLine();
+    
+            ArrayList<String> animal_data = new ArrayList<String>(Arrays.asList(line.split(",")));
+            
+            String name = animal_data.get(0);
+            String species = animal_data.get(1);
+            int birthYear = Integer.valueOf(animal_data.get(2));
+            String fileName = animal_data.get(3);
+            ZooAnimal animal = new ZooAnimal(name, species, birthYear, fileName);
+            addAnimal(animal);
+            numberOfLines++;
+            
+        }
+        
+        scanner.close();
+       
+        return;
+        
+    }
+
+    /* Displays text of animal information for each animal.
+       help received from lab assistant Sam Wiseman
+     */
+    public void displayZooAsText() 
+    {
+        if (sortedList.size()!=0)
+        {
+            for (int i = 0; i < sortedList.size(); i++)
+            {
+                try
+                {
+                    ZooAnimal tempAnimal = sortedList.get(i);
+                    System.out.print(tempAnimal.getName());
+                    System.out.print(" " + tempAnimal.getSpecies());
+                    System.out.print(" " + tempAnimal.getAge());
+                    System.out.println();
+                }
+                catch(IndexOutOfBoundsException e)
+                {
+                    System.err.println("IndexOutOfBoundsException");
+                }
+            }
+
+        }
+        else
+        {
+            System.out.println("The list is empty!");
+        }
+    }
+
+    /* Displays picture for each animal.
+       help recieved from Gege Zhang
+     */
+    public void displayZooAsPicture() 
+    {
+        EzImage myImage = null;
+        EzImage myImage2 = null;
+
+        try 
+        {
+            myImage = new EzImage(sortedList.get(0).getImg());
+        }
+        catch (Exception e)
+        {
+            System.err.println(e);
+            System.exit(1);
+        }
+
+        for (int j = 1; j<sortedList.size(); j++)
+        {
+            try
+            {
+                myImage2 = new EzImage(sortedList.get(j).getImg());
+            }
+            catch (Exception e) 
+            {
+                System.err.println(e);
+                System.exit(1);
+            }
+            myImage=myImage.appendToRight(myImage2);
+        } 
+        myImage.show("zoo1");   
+    }
+    
+  /** Adds animal to the zoo.
+  @param animal
+  */
+  public void addAnimal(ZooAnimal animal)
+  {
+      sortedList.add(animal);
+  }
+    
+    /* Tests for empty command ine arguments, and determines whether to display text or images.
+     @param String[] args from command line, first is file, second is picture
+     help received from Xingfan Xia
+     */    
+   public static void main (String[] args)
+   {
+       if (args.length < 2) 
+       {
+            System.err.println("Please use this class wih `java ZooDisplayer $Filepath $text_or_display as command line arguments`");
+            System.exit(0);
+       }
+        String inputFilePath = args[0];
+        String text_or_display = args[1];
+        
+        File myfile = new File(inputFilePath);
+
+        if (myfile.length()==0) 
+        {
+            System.err.println("Ooops, your file is empty, we cannot help you!");
+            System.exit(0);
+        }
+        ZooDisplayer zoo1 = new ZooDisplayer(inputFilePath);
+        if (!(text_or_display.equals("picture")) && !(text_or_display.equals("text")))
+        {
+            System.err.println("Please choose between picture or text next time, thank you!");           
+        }
+            
+        if (text_or_display.equals("picture")) 
+        {
+            zoo1.displayZooAsPicture();
+        }
+        if (text_or_display.equals("text"))
+        {
+            zoo1.displayZooAsText();
+        }
+    }           
+}
