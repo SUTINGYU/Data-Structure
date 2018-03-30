@@ -1,0 +1,268 @@
+/**
+ * @author by Yuting Su
+ * @author by Charlie Broadbent
+ * @date 06 Mar 2018
+ * This class uses 3-nodes in order to store distinct words and their counts when added (increment()) to the tree.
+ */
+
+import java.util.List;
+import java.util.ArrayList;
+
+public class TreeWordCountMap<E extends Comparable<E>>
+{
+    private List<WordCount> words = new ArrayList<WordCount>();
+    private int size = 0;
+    private Node root;
+    
+    //Class constructor
+    public TreeWordCountMap()
+    {
+        root = null;
+    }
+    
+    //A nested class used to store a word and its count
+    public static class WordCount
+    {
+       private String word;
+       private int count = 1;
+       public WordCount(String word)
+       {
+            this.word = word;
+       }
+
+       public String getWord()
+       {
+            return word;
+       }
+       public int getCount()
+       {
+            return count;
+       }
+    }
+    
+    // A nested node class that contains two wordcounts and points to three children.
+    private static class Node
+    {
+       private WordCount leftWord;
+       private WordCount rightWord;
+       private Node leftChild;
+       private Node middleChild;
+       private Node rightChild;
+       
+       public WordCount getLeftWord()
+       {
+        return leftWord;
+       }
+       public WordCount getRightWord()
+       {
+        return rightWord;
+       }
+       public boolean hasLeftChild()
+       {
+        if (leftChild == null)
+        {
+            return false;
+        }
+        return true;
+       }
+       public boolean hasMiddleChild()
+       {
+        if (middleChild == null)
+        {
+            return false;
+        }
+        return true;
+       }
+       public boolean hasRightChild()
+       {
+        if (rightChild == null)
+        {
+            return false;
+        }
+        return true;
+       }
+    }    
+    
+    /** If the specified word is already in this map, then its count is
+        increased by one. Otherwise, the word is added to this map with a count
+        of 1.
+        @param a String word that is added to the tree
+    */
+    
+    public void increment(String word)
+    {
+        root = increment(root, word);
+    }
+    
+    /** A helper method for increment(String word)
+        @param a Node node used to help add the word
+        @param a String word that is added to the tree
+        @return a Node used to keep track of path traveled 
+    */
+    private Node increment(Node node, String word)
+    {
+        // add word normally if node is empty
+        if (node == null)
+        {
+            node = new Node();
+            node.leftWord = new WordCount(word);
+            size++;
+            return node;
+        }
+        // Compare word to leftWord in current node
+        int cmp = word.compareTo(node.leftWord.getWord());
+        //Add to count if words are equal
+        if (cmp == 0)
+        {
+            node.leftWord.count++;
+        }
+        // If word is less than leftWord
+        else if(cmp < 0)
+        {
+            // If there is no rightWord, move leftWord to rightWord, 
+            // and make word as leftWord
+            if(node.rightWord == null)
+            {
+                node.rightWord = new WordCount(node.leftWord.word);
+                node.rightWord.count = node.leftWord.count;
+                node.leftWord =  new WordCount(word);
+                size++;
+            }
+            else
+            {
+                // If node is full, and does not have leftChild
+                if(!node.hasLeftChild())
+                {
+                    Node newNode = null;
+                    node.leftChild = newNode;
+                }
+                // Add word to leftChild
+                node.leftChild = increment(node.leftChild, word); 
+            }
+        }
+        // If word is greater than leftWord
+        else if(cmp > 0)
+        {
+            // If current node has no rightWord, make word to rightWord
+            if (node.rightWord == null)
+            {
+                node.rightWord =  new WordCount(word);
+                size++;
+                return node;
+            }
+            else
+            {
+                // If node is full, compare word to rightWord
+                int cmp2 = word.compareTo(node.rightWord.word);
+                // If word equals rightWord, increase count
+                if(cmp2 == 0)
+                {
+                    node.rightWord.count++;
+                }
+                // If word is greater than rightWord
+                else if (cmp2 > 0 )
+                {
+                    // If current node has no rightChild, create it and add word to it
+                    if(!node.hasRightChild())
+                    {
+                        Node newNode = null;
+                        node.rightChild = newNode;
+                    }
+                    node.rightChild = increment(node.rightChild, word); 
+                }
+                else
+                {
+                    // If word is inbetween leftWord and rightWord, add to middleChild
+                    if(!node.hasMiddleChild())
+                    {
+                        Node newNode = null;
+                        node.middleChild = newNode;
+                    }
+                    node.middleChild = increment(node.middleChild, word); 
+                }
+            }
+        } 
+        return node;
+    }
+
+    /** Returns true if word is contained in this map. 
+        @param a String word that is searched for.
+    */
+    public boolean contains(String word)
+    {
+        List<WordCount> contains = getWordCountsByWord();
+        for (int i = 0; i < contains.size(); i++)
+        {
+            int cmp = word.compareTo(contains.get(i).getWord());
+            if (cmp == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Returns a list of WordCount objects, one per word in this map,
+        sorted alphabetically by word.
+    */
+    public List<WordCount> getWordCountsByWord()
+    { 
+        getWordCountsByWord(root);
+        
+        return words;
+    }
+    
+    /** A helper method
+        @param A Node node used to travers tree in order
+    */
+    public void getWordCountsByWord(Node node)
+    {
+        if (node != null)
+        {
+            getWordCountsByWord(node.leftChild);
+            if (node.getRightWord() != null)
+            {
+                words.add(node.getLeftWord());
+                getWordCountsByWord(node.middleChild);
+                words.add(node.getRightWord());
+                getWordCountsByWord(node.rightChild);
+            }
+            else
+            {
+                words.add(node.getLeftWord());
+            }
+        }
+        
+    }
+
+    /** Returns a list of WordCount objects, one per word in this map,
+        sorted in decreasing order by count.
+    */
+    public List<WordCount> getWordCountsByCount()
+    {
+        List<WordCount> temp = getWordCountsByWord();
+        List<WordCount> sort = new ArrayList<WordCount>();
+        int size = temp.size();
+        for (int j = 0; j < size; j++)
+        {
+            int max = 0;
+            for (int i = 0; i < temp.size() ; i++)
+            {
+                
+                if (temp.get(i).getCount() > temp.get(max).getCount()) 
+                {
+                    max = i;
+                }
+            }
+            sort.add(temp.remove(max));
+        }
+        return sort;
+    }
+    
+    /** Returns an interger that is the size of the tree.
+    */
+    public int getSize()
+    {
+        return size;
+    }
+}
