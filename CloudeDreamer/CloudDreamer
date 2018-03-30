@@ -1,0 +1,191 @@
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.lang.ClassCastException;
+
+/**
+ * @author by Yuting Su
+ * @author by Charlie Broadbent
+ * @date 06 Mar 2018
+ * A class that loads a text file and counts the number of distinct words 
+ * in the file using TreeWordCountMap, and returns the words in alphabetical order,
+ * in order by frequency, or creates a word cloud of the most frequently used words.
+ */
+public class CloudDreamer
+{
+    /** Reads through stopword file (list of words to be ignored in text file)
+        @return a List of stopwords
+    */
+    public static List<String> loadStopWord()
+    {
+        List<String> stop = new ArrayList<String>();
+        File input1 = new File("stopwords.txt");
+        Scanner scanner1 = null;
+            try
+            {
+                scanner1 = new Scanner(input1);
+            }
+            catch(FileNotFoundException e)
+            {
+                System.err.println(e);
+                System.exit(1);
+            }
+
+            while (scanner1.hasNext())
+            {
+                String line1 = scanner1.next();
+                stop.add(line1);
+
+            }
+            scanner1.close();
+            return stop;
+    }
+    
+    /** Reads through input file, cleans up words, and then adds the word to the TreeWordCountMap
+        @param a String that is the inputFile name
+        @param a TreeWordCountMap that is used to store the words based on alphabetical order
+    */
+    public static void load(String inputFile, TreeWordCountMap<String> tree)
+    {
+        List<String> stop = loadStopWord();
+        File input = new File(inputFile);
+        Scanner scanner = null;
+        
+        try
+        {
+            scanner = new Scanner(input);
+        }
+        catch(FileNotFoundException e)
+        {
+            System.err.println(e);
+            System.exit(1);
+        }
+            
+        while (scanner.hasNext())
+        {
+            String line = scanner.next();
+
+            // Removes every non-letter character
+            String newWord = line.replaceAll("[^a-zA-Z]","");
+            
+            // Checks if word to be added is a stop word, or somehow blank
+            if((!stop.contains(newWord.toLowerCase())) && (!newWord.equals("")))
+            {
+                tree.increment(newWord);   
+            }     
+        }
+        scanner.close();
+    }
+    
+    /** Prints out all the words in the tree in alphabetical order.
+        @param the TreeWordCountMap that contains the words
+    */
+    public static void printAl(TreeWordCountMap<String> tree)
+    {
+        List<TreeWordCountMap.WordCount> list = tree.getWordCountsByWord();
+        for (int i = 0; i < tree.getSize(); i++)
+        {
+            System.out.println(list.get(i).getWord() + ": " + list.get(i).getCount());
+        }
+    }
+    
+    /** Prints out all the words in the tree in order of frequency, from greatest to least.
+        @param the TreeWordCountMap that contains the words
+    */
+    public static void printCo(TreeWordCountMap<String> tree)
+    {
+        List<TreeWordCountMap.WordCount> list = tree.getWordCountsByCount();
+        for (int i = 0; i < tree.getSize(); i++)
+        {
+            System.out.println(list.get(i).getWord() + ": " + list.get(i).getCount());
+        }
+    }
+    
+    /** Prints out the HTML code of a word cloud generated based on word frequency.
+        @param the number of words to be included in the word cloud
+        @param the TreeWordCountMap that contains the words
+        @param the string of the file name used to give the word cloud a title
+    */
+    public static String printCloud(int numWords, TreeWordCountMap<String> tree, String inputFile)
+    {
+        if(numWords > tree.getSize())
+        {
+            System.err.println("There are only " + tree.getSize() + " distinct words in your file!");
+            System.exit(0);
+        }
+        WordCloudMaker maker = new WordCloudMaker();
+        List<TreeWordCountMap.WordCount> wordCountList = tree.getWordCountsByCount();
+        List<TreeWordCountMap.WordCount> wordList = new ArrayList<TreeWordCountMap.WordCount>();
+        for (int i = 0; i < numWords; i++)
+        {
+            wordList.add(wordCountList.get(i));
+        }
+        return maker.getWordCloudHTML(inputFile + " Word Cloud", wordList);
+    }
+    
+    // This main method helps direct the user on how to use the command line arguments, 
+    //and restricts them from using them incorrectly.
+    public static void main (String[] args)
+    {
+        TreeWordCountMap<String> tree = new TreeWordCountMap<String>();
+        if (args.length < 2) 
+        {
+            System.err.println("Please use this class wih `java CloudDreamer $textFileName$alphabetical_or_frequency_or_cloud_ numberOfWordsToInclude as command line arguments`");
+            System.exit(0);
+        }
+        
+        String inputFile = args[0];
+        String input = args[1];
+        
+        File myfile = new File(inputFile);
+        if (myfile.length()==0) 
+        {
+            System.err.println("Ooops, your file is empty, we cannot help you!");
+            System.exit(0);
+        }
+
+        if (!(input.equals("alphabetical")) && !(input.equals("frequency")) && !(input.equals("cloud")))
+        {
+            System.err.println("Please choose among alphabetical or frequency or cloud next time, thank you!");           
+        }
+        
+        // Creates the tree using the text from the inputFile
+        load(inputFile, tree);
+            
+        if (input.equals("alphabetical")) 
+        {
+            printAl(tree);
+        }
+        else if (input.equals("frequency"))
+        {
+            printCo(tree);
+        }
+        else if (input.equals("cloud") && args.length == 2)
+        {
+            System.out.println("Please use the format: java CloudDreamer cloud numberOfWordsToInclude");;
+        }
+        else if (args.length == 3)
+        {
+            if ((input.equals("cloud")))
+            {
+                try
+                {
+                    int num = Integer.parseInt(args[2]);
+                    System.out.println(printCloud(num,tree,inputFile));
+                }
+                catch(ClassCastException e)
+                {
+                    System.err.println(e);
+                    System.exit(1);
+                }
+            }
+            else
+            {
+                System.out.println("Please use the format: java CloudDreamer cloud numberOfWordsToInclude");
+            }
+        }       
+     }
+}
