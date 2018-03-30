@@ -1,0 +1,188 @@
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.Deque;
+import java.util.ArrayDeque;
+import java.lang.IndexOutOfBoundsException;
+import java.lang.NullPointerException;
+import java.util.Arrays;
+
+/**
+ @Author1: Charlie Broadbent
+ @Author2: Yuting Su
+ @Date: 12 Feb 2018
+ **It's a class that tests if SortedLinkedList.java works. 
+*/
+public class SortedListTester 
+{
+    //Initialize variables
+    //We know that it is not a convention to make static variables in the way we are doing, 
+    //but it is the only way we can make it work.
+    static SortedList<ZooAnimal> sort = new SortedLinkedList();
+    static ZooAnimal zooAnimal1 = new ZooAnimal("Tapan","giraffe",1996,"zooPics/giraffe2.jpg");
+    static ZooAnimal zooAnimal2 = new ZooAnimal("Lola", "lemur", 2005, "zooPics/lemur.jpg");
+    static ZooAnimal zooAnimal3 = new ZooAnimal("Leanne", "koala", 2000, "zooPics/koala2.jpg");
+    static ZooAnimal zooAnimal4 = new ZooAnimal("Sophie","giraffe",2010,"zooPics/giraffe.jpg");
+    static ZooAnimal zooAnimal6 = new ZooAnimal("Tapan","giraffe",1996,"zooPics/giraffe2.jpg");
+    static ZooAnimal zooAnimal5 = new ZooAnimal("Ozzie","loris",2008,"zooPics/loris.jpg");
+    static ZooAnimal zooAnimal7 = new ZooAnimal("Kevin","koala",2007,"zooPics/koala.jpg");
+    static ZooAnimal zooAnimal8 = new ZooAnimal("Abby","aardvark",2007,"zooPics/aardvark.jpg");
+    
+    //A method to print out every animal in the SortedList sort.
+    public static void print()
+    {
+      if (!sort.isEmpty())
+      {
+          for (int i = 0; i < sort.size(); i++)
+          { 
+            try{
+                System.out.println(sort.get(i).getName());
+                }
+             catch(NullPointerException e){
+                    System.err.println("NullPointerException");
+                }
+            }
+          return;
+        }
+        System.out.println("The list is empty!");
+        return; 
+    }
+    
+    //A method to check the remove() method in SortedlinkedList.java
+    public static void checkRemove()
+    {
+        System.out.println("Check removal of Target item. Removing zooAnimal3: Leanne");
+        sort.remove(zooAnimal3);
+        print();
+        System.out.println();
+        
+        System.out.println("Try to remove an item (zooAnimal8: aardvark) that is not in the list:");
+        sort.remove(zooAnimal8);
+        System.out.println();
+        
+        System.out.println("Check removal of item at certain index. Removing item at index 4: Lola");
+        sort.remove(4);
+        print();
+        System.out.println();
+        
+        System.out.println("Try to remove an item at index 20 that is out of bounds:");
+        sort.remove(20);
+        System.out.println();
+    }
+    
+    //A method to check the get() method and indexOf() method in SortedlinkedList.java
+    public static void checkGet_IndexOf()
+    {
+        System.out.println("Checking index of Ozzie in list:");
+        System.out.println("The index of Ozzie is " + sort.indexOf(zooAnimal5));
+        System.out.println();
+        
+        System.out.println("Checking index of Abby who is not in the list, the result should be -1");
+        System.out.println("The index of Abby is " + sort.indexOf(zooAnimal8));
+        System.out.println();
+        
+        System.out.println("Checking animal at position 0:");
+        System.out.println("Animal at index 0: " + sort.get(0).getName());
+        System.out.println();
+        
+        System.out.println("Checking animal at position 12, which is out of bounds:");
+        sort.get(12);
+        System.out.println();
+    }
+    
+    //A method to check the contains() method in SortedlinkedList.java
+    public static void checkContains()
+    {
+        System.out.println("Checking if the list contains zooAnimal7: Kevin");
+        System.out.println("Contains Kevin? " + sort.contains(zooAnimal7));
+        System.out.println();
+        
+        System.out.println("Checking if the list contains zooAnimal8: Abby, who is not in the list");
+        System.out.println("Contains Abby? " + sort.contains(zooAnimal8));
+        System.out.println();
+    }
+    
+    //A method to check the size() method in SortedlinkedList.java
+    public static void checkSize()
+    {
+        System.out.println("Checking the size of the list");
+        System.out.println("The size of the list is " + sort.size());
+        System.out.println();
+    }
+    
+    //A method to check the isEmpty() method, clear() method and toArray() method in SortedlinkedList.java
+    //Help received from lab assistant Dustin
+    public static void checkIsEmpty_Clear_ToArray()
+    {
+        System.out.println("Checking if the list is empty");
+        System.out.println("Is the list empty? " + sort.isEmpty());
+        System.out.println();
+        
+        System.out.println("Checking the method toArray"); 
+        Object[] array = sort.toArray();
+        for (int i = 0; i < sort.size(); i++)
+        {
+            if (array[i] instanceof ZooAnimal)
+            {
+                ZooAnimal animal = (ZooAnimal) array[i];
+                System.out.println(animal.getName());
+            }
+        }
+        System.out.println();
+        
+        System.out.println("Checking clear method");
+        sort.clear();
+        System.out.println("Checking if the list is empty, if it is, then the clear method works");
+        System.out.println("Is the list empty? " + sort.isEmpty());
+        System.out.println();
+        
+        System.out.println("Checking the method toArray on an empty list"); 
+        Object[] array1 = sort.toArray();
+        for (int i = 0; i < sort.size(); i++)
+        {
+            if (array1[i] instanceof ZooAnimal)
+            {
+                ZooAnimal animal = (ZooAnimal) array1[i];
+                System.out.println(animal.getName());
+            }
+        }  
+    }
+    
+    //A method to add zooAnimals in sorted order
+    public static void addAnimals()
+    {
+        List<ZooAnimal> visitOrder = new ArrayList<ZooAnimal>();
+        
+        visitOrder.add(zooAnimal1);
+        visitOrder.add(zooAnimal2);
+        visitOrder.add(zooAnimal3);
+        visitOrder.add(zooAnimal4); 
+        visitOrder.add(zooAnimal5); 
+        visitOrder.add(zooAnimal6); 
+        visitOrder.add(zooAnimal7); 
+        
+        for (int i = 0 ; i < visitOrder.size() ; i++)
+        {
+            try{
+                    sort.add(visitOrder.get(i));
+                }
+                catch(NullPointerException e){
+                    System.err.println("NullPointerException");
+                }
+            
+        }
+    }
+    
+    //Main method that tests sortedList by calling methods that tests its methods
+    public static void main(String[] args)
+    {
+        addAnimals();
+        print();
+        System.out.println();
+        checkRemove();
+        checkGet_IndexOf();
+        checkContains();
+        checkSize();
+        checkIsEmpty_Clear_ToArray();
+    }
+}
