@@ -1,0 +1,348 @@
+import java.util.Scanner;
+import java.util.InputMismatchException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+
+/** Starter code for a maze.
+    @author Jed Yang, 2017-01-14
+    @author Yuting Su
+    This class loads a maze from a file, solves the maze, and prints the solution if indicated. 
+*/
+public class Maze
+{
+   // private instance variables
+   // number of columns and rows in the maze
+   private int numCols;
+   private int numRows;
+
+   // coordinates for start/end square positions
+   private int startCol, startRow;
+   private int endCol, endRow;
+
+   // a list that stores all the squares of the maze
+   private List <MazeSquare> squareList;
+
+  /**
+   * Creates an empty maze with no squares.
+   * @ param inputFilePath file from command line
+   */
+   public Maze(String inputFilePath)
+   {
+    squareList = new ArrayList<MazeSquare>();
+    String path = inputFilePath;
+    this.load(path);
+    for (int row = 0; row < numRows; row++)
+    {
+     for (int col = 0; col < numCols; col++) 
+     {
+      MazeSquare square = this.getMazeSquare(col, row);
+          square.setVisited(false); //private
+     }
+    }
+   }
+
+   /** Load the maze from a file.
+       @return True if successful. */
+   public boolean load(String fileName)
+   {
+      File inputFile = new File(fileName);
+      Scanner scanner = null;
+
+      try
+      {
+         scanner = new Scanner(inputFile);
+      }
+      catch (FileNotFoundException e)
+      {
+         System.err.println("Maze file not found: " + fileName);
+         return false;
+      }
+
+      try
+      {
+         // read the first three lines of the maze file
+         numCols = scanner.nextInt();
+         numRows = scanner.nextInt();
+         startCol = scanner.nextInt();
+         startRow = scanner.nextInt();
+         endCol = scanner.nextInt();
+         endRow = scanner.nextInt();
+      }
+      catch (InputMismatchException e)
+      {
+         System.err.println("Malformed maze file header.");
+         return false;
+      }
+
+      // check that start/end coordinates are valid
+      if (!inRange(startCol, 0, numCols)
+         || !inRange(startRow, 0, numRows)
+         || !inRange(endCol, 0, numCols)
+         || !inRange(endRow, 0, numRows))
+      {
+         System.err.println("Start or end goal out of bounds.");
+         return false;
+      }
+
+      // go through the rest of the lines of the file to get information
+      for(int i = 0; i < numRows; i++)
+      {
+        String line = scanner.next();
+        for(int j = 0; j < numCols; j++)
+        {
+          MazeSquare square = new MazeSquare(j,i,line.charAt(j));
+          if (! square.validDescriptor(line.charAt(j)))
+          {
+            return false;
+          } else {
+              squareList.add(square);
+          }
+        }
+      }
+      if (! scanner.hasNext())
+      {
+        return false;
+      }
+
+      return true;
+   }
+
+   /** Checks if num is in the range lower (inclusive) to upper (exclusive).
+       @param num
+       @param lower
+       @param upper
+       @return True if lower <= num < upper
+   */
+   private static boolean inRange(int num, int lower, int upper)
+   {
+      return lower <= num && num < upper;
+   }
+   
+   /** Prints the Maze in a pretty way. */
+   public void print()
+   {
+      // top border
+      for (int col = 0; col < numCols; col++)
+      {
+         System.out.print("+");
+         System.out.print("---");
+      }
+      System.out.println("+");
+
+      // one row at a time
+      for (int row = 0; row < numRows; row++)
+      {
+         // the row of squares with vertical dividing walls
+         for (int col = 0; col < numCols; col++)
+         {
+            // retrieve the square to be printed; this is what allows the
+            // print() function to not care about how the squares are stored
+            MazeSquare square = this.getMazeSquare(col, row);
+
+            // left wall of a square
+            if (square.hasLeftWall())
+            {
+               System.out.print("|");
+            }
+            else
+            {
+               System.out.print(" ");
+            }
+
+            System.out.print(" ");
+
+            // square with possible designation of start/finish
+            if (col == startCol && row == startRow)
+            {
+               System.out.print("S");
+            }
+            else if (col == endCol && row == endRow)
+            {
+               System.out.print("F");
+            }
+            // square that is in the solution
+            else if (square.getStarred() == true)
+            {
+              System.out.print("*");
+            }
+            else
+            {
+              System.out.print(" "); 
+            }
+            System.out.print(" ");
+         }
+
+         System.out.println("|"); // right-most wall
+
+         // horizontal walls below the row just printed
+         for (int col = 0; col < numCols; col++)
+         {
+            MazeSquare square = this.getMazeSquare(col, row);
+            System.out.print("+");
+            if (square.hasBottomWall())
+               System.out.print("---");
+            else
+               System.out.print("   ");
+         }
+         System.out.println("+"); // right-most wall
+      } // end for
+   } // end print()
+
+   /** Get the mazesquare at given row and column.
+       @param col
+       @param row
+       @return The MazeSquare specified by column and row.
+   */
+   private MazeSquare getMazeSquare(int col, int row)
+    {
+      MazeSquare square = null;
+      for (MazeSquare square1 : squareList) 
+      {
+        if (square1.getRow() == row && square1.getCol() == col)
+        {
+          square = square1;
+        }
+      }
+      return square;
+    }
+
+   /**solve the maze 
+    @ Create an empty stack and push all the squares that are part of solution in this stack.
+    @ print "No solution!" if it does not have one.
+    @ return the stack starredSquare
+   */
+  public Stack<MazeSquare> getSolution()
+    {
+      boolean done = false;
+      Stack<MazeSquare> solution = new CarlStack<MazeSquare>();
+      for (MazeSquare square1 : squareList)
+        {
+          if (square1.getRow() == startRow && square1.getCol() == startCol)
+          {
+            solution.push(square1);
+            square1.setVisited(true);
+          }
+
+        }
+
+      MazeSquare start = getMazeSquare(startCol, startRow);
+      MazeSquare current = getMazeSquare(startCol, startRow);
+      MazeSquare end = getMazeSquare(endCol, endRow);
+      MazeSquare square2 = null; 
+
+      while (!done && !solution.isEmpty())
+      {
+        if (solution.peek() == end)
+        { 
+          done = true;
+        }
+        else if (!(current.getCol()==(numCols-1)) &&
+                 !(getMazeSquare(current.getCol() + 1, current.getRow()).hasLeftWall()) &&
+                 !(getMazeSquare(current.getCol() + 1, current.getRow()).getVisited()))
+        {
+          current = getMazeSquare((current.getCol() + 1), current.getRow());
+          solution.push(current);
+          current.setVisited(true);
+          current.setStarred(true);
+        }
+        else if (!(current.getRow()==(numRows-1)) && 
+                 !(getMazeSquare(current.getCol(), current.getRow()).hasBottomWall()) && 
+                 !getMazeSquare(current.getCol(), current.getRow() + 1).getVisited())
+        {
+          current = getMazeSquare(current.getCol(), (current.getRow() + 1));
+          solution.push(current);
+          current.setVisited(true);
+          current.setStarred(true);
+        }
+        else if (!(current.getCol()==0) && 
+                 !getMazeSquare(current.getCol(), current.getRow()).hasLeftWall() && 
+                 !getMazeSquare(current.getCol() - 1, current.getRow()).getVisited())
+        {
+          current = getMazeSquare((current.getCol() - 1), current.getRow());
+          solution.push(current);
+          current.setVisited(true);
+          current.setStarred(true);
+        }
+        else if (!(current.getRow()==0) && 
+                 !getMazeSquare(current.getCol(), current.getRow() - 1).hasBottomWall() && 
+                 !getMazeSquare(current.getCol(), current.getRow() - 1).getVisited())
+        {
+          current = getMazeSquare(current.getCol(), (current.getRow() - 1));
+          solution.push(current);
+          current.setVisited(true);
+          current.setStarred(true);
+        }
+        else
+        {
+          square2 = solution.pop();
+          if(!solution.isEmpty())
+          {
+          current = solution.peek();
+          square2.setStarred(false);
+          }
+        }
+        
+      }
+
+    if(solution.isEmpty())
+    {
+      System.out.println("No solution!");
+    }
+    
+    return starredSquare;
+  }
+
+   /**process the command line argument(s), creates a new Maze.
+    @Tests for empty command line arguments, and determines whether to print maze or print solution.
+    @param String[] args from command line.
+   */
+  public static void main(String[] args)
+    {
+      /**If there is no command line arguments, remind the user to use the currect format.
+      */
+      if (args.length == 0)
+      {
+        System.out.println("Please use the foramt: java Maze <mazeFile> [--solve]");
+        return;
+      } 
+
+      String inputFilePath = args[0];
+      Maze maze = new Maze(inputFilePath);
+
+      /**If there is one command line argument, 
+       * loads the maze and prints it without displaying the solution. 
+       */
+      if (args.length == 1)
+      {
+        //since the default of boolean is java is false, the condition of printing out star is not reached, so "*" would not be printed. 
+        maze.print();
+      }
+
+      /**If there are two command line arguments and the second one is --solve, 
+       * display both the maze and the solution
+       */
+      else if (args.length == 2 && args[1].equals("--solve"))
+      {
+        MazeSquare square3 = null;
+        Stack<MazeSquare> solution = maze.getSolution(); 
+        maze.print();
+        /**pop the squares in the starredSquare stack and mark them back to unvisited after the solution is printed out
+         */
+        while(!solution.isEmpty())
+        {
+          square3 = solution.pop();
+          square3.setStarred(false);
+        }
+      }
+
+       /**If there are two command line arguments and the second one is not --solve, 
+        * remind the user to write --solve
+        */
+      else if (args.length == 2 && !args[1].equals("--solve"))
+      {
+        System.out.println("Please write '--solve' after your mazeFile");
+      }
+    }
+}
