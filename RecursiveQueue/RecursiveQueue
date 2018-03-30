@@ -1,0 +1,153 @@
+import java.lang.NullPointerException;
+import java.util.NoSuchElementException;
+
+/**
+ ** Author: Yuting Su
+ ** Date: Feb 15 2018
+ ** A class that implements Queue interface in order to make a recursive queue.
+*/
+public class RecursiveQueue implements Queue<String>
+{
+	private String front;
+	private String back;
+	private RecursiveQueue middle;
+	private int length;
+
+	//Class constructor
+	public RecursiveQueue()
+	{
+		this.front = null;
+		this.back = null;
+		this.middle = null;
+		this.length = 0;
+	}
+
+	/** Inserts the specified element into this queue.
+	    @throws NullPointerException if element is null
+	    @param item string to be added to the queue
+	*/
+	public void add(String item)
+	{
+		if(item == null)
+		{
+			throw new NullPointerException("Insert Null");
+		}
+		if (length == 0)
+		{
+			front = item;
+			length++;
+		}
+		else if (length == 1)
+		{
+			back = item;
+			length++;
+		}
+		else if (length == 2)
+		{	
+			this.middle = new RecursiveQueue();
+
+			middle.add(back);
+
+			back = item;
+
+			length++;
+		}
+		else
+		{
+			middle.add(back);
+			back = item;
+			length++;
+
+		}
+	}
+
+	/** Retrieves, but does not remove, the head of this queue.
+	    @return the head of this queue
+	    @throws NoSuchElementException if this queue is empty
+	*/
+	public String element()
+	{
+		if(length == 0)
+		{
+			throw new NoSuchElementException("The queue is empty.");
+		}
+		else
+		{
+			String head = front;
+			return head;
+		}
+	}
+
+	/** Retrieves and removes the head of this queue.
+	    @return the head of this queue
+	    @throws NoSuchElementException if this queue is empty
+	*/
+	public String remove()
+	{
+		if(length == 0)
+		{
+			throw new NoSuchElementException("Cannot remove. The queue is empty.");
+		}
+		else if (length == 1)
+		{
+			String temp = front;
+			front = null;
+			length--;
+			return temp;
+		}
+		else if(length == 2)
+		{
+			String temp = front;
+			front = back;
+			back = null;
+			length--;
+			return temp;
+		}
+		else
+		{
+			String temp = front;
+			front = middle.remove();
+			length--;	
+			return temp;
+		}	
+
+	}
+
+	/** Returns true if this collection contains no elements.
+	    @return true if this collection contains no elements
+	*/
+	public boolean isEmpty()
+	{
+		if(length == 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	/** Prints the contents of the queue to the screen in some clean,
+	    readable way.
+	*/
+	public void display()
+	{
+		if(length == 0)
+		{
+			throw new NullPointerException("Cannot display. The queue is empty.");
+		}
+		else if(length == 1)
+		{
+			System.out.println(front);
+		}
+		else if(length == 2)
+		{
+			System.out.println(front);
+			System.out.println(back);
+		}
+		else
+		{
+			System.out.println(front);
+			middle.display();
+			System.out.println(back);
+		}
+	}
+}
